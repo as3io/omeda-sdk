@@ -1,0 +1,21 @@
+{
+    "name": "as3/omeda-sdk",
+    "license": "MIT",
+    "type": "library",
+    "description": "Provides Omeda API client functionality and SDK tools.",
+    "authors": [
+        {
+            "name": "Jacob Bare",
+            "email": "jacob.bare@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "As3\\OmedaSDK\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=5.5",
+        "as3/parameters": "^1.0" 
+    }
+}
