@@ -66,7 +66,8 @@ class ApiClient
      */
     public function __construct(array $settings = null, $staging = false)
     {
-        $this->setClient($staging);
+        $this->initClient();
+        $this->useStaging($staging);
         $this->setParameterDefinitions();
         $this->setResources();
         if (null !== $settings) {
@@ -178,6 +179,7 @@ class ApiClient
         $method      = strtoupper($method);
         $contentType = strtolower($contentType);
         $endpoint    = trim($endpoint, '/');
+        $uri         = $this->prepareRequestUri($endpoint);
 
         $body    = $this->prepareRequestBody($body, $contentType);
         $options = [
@@ -186,7 +188,19 @@ class ApiClient
         if (!empty($body)) {
             $options['body'] = $body;
         }
-        return $this->client->request($method, $endpoint, $options);
+        return $this->client->request($method, $uri, $options);
+    }
+
+    /**
+     * Specifies whether to use the Omeda staging API.
+     *
+     * @param   bool    $staging
+     * @return  self
+     */
+    public function useStaging($staging = true)
+    {
+        $this->isStaging = (boolean) $staging;
+        return $this;
     }
 
     /**
@@ -198,6 +212,17 @@ class ApiClient
     private function createParameterInstance(array $parameters)
     {
         return new Parameters($this->definitions, $parameters);
+    }
+
+    /**
+     * Sets the HTTP client instance.
+     *
+     * @return  self
+     */
+    private function initClient()
+    {
+        $this->client = new Client();
+        return $this;
     }
 
     /**
@@ -240,20 +265,15 @@ class ApiClient
     }
 
     /**
-     * Sets the HTTP client instance.
+     * Prepares the request uri.
      *
-     * @param   bool    $staging
-     * @return  self
+     * @param   string  $endpoint
+     * @return  string
      */
-    private function setClient($staging)
+    private function prepareRequestUri($endpoint)
     {
-        $this->isStaging = (boolean) $staging;
-
         $host = $this->isUsingStaging() ? self::HOST_STAGING : self::HOST_PROD;
-        $uri  = sprintf('https://%s/%s/', $host, trim(self::BASE_ENDPOINT, '/'));
-
-        $this->client = new Client(['base_uri' => $uri]);
-        return $this;
+        return sprintf('https://%s/%s/%s', $host, trim(self::BASE_ENDPOINT, '/'), trim($endpoint, '/'));
     }
 
     /**
