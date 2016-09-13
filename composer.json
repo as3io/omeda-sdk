@@ -16,6 +16,7 @@
     },
     "require": {
         "php": ">=5.5",
-        "as3/parameters": "^1.0" 
+        "as3/parameters": "^1.0",
+        "guzzlehttp/guzzle": "^6.2"
     }
 }
