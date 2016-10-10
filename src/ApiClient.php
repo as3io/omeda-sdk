@@ -90,9 +90,13 @@ class ApiClient
      *
      * @param   string  $endpoint
      * @return  string
+     * @throws  \RuntimeException
      */
     public function buildBrandEndpoint($endpoint)
     {
+        if (false === $this->hasValidConfig()) {
+            throw new \RuntimeException(sprintf('The Omeda API configuration is not valid. Unable to build endpoint.'));
+        }
         return sprintf('/brand/%s/%s', $this->configuration->get('brandKey'), trim($endpoint, '/'));
     }
 
@@ -302,7 +306,8 @@ class ApiClient
     {
         $namespace = sprintf('%s\ApiResources', __NAMESPACE__);
         $resources = [
-            'brand' => 'BrandResource',
+            'brand'     => 'BrandResource',
+            'customer'  => 'CustomerResource',
         ];
         foreach ($resources as $key => $class) {
             $fqcn = sprintf('%s\%s', $namespace, $class);
