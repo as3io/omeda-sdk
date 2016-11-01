@@ -308,6 +308,7 @@ class ApiClient
         $resources = [
             'brand'     => 'BrandResource',
             'customer'  => 'CustomerResource',
+            'utility'   => 'UtilityResource',
         ];
         foreach ($resources as $key => $class) {
             $fqcn = sprintf('%s\%s', $namespace, $class);
