@@ -2,6 +2,8 @@
 
 namespace As3\OmedaSDK\ApiResources;
 
+use As3\OmedaSDK\Exception\InvalidArgumentException;
+
 class UtilityResource extends AbstractResource
 {
     /**
@@ -26,7 +28,7 @@ class UtilityResource extends AbstractResource
         $total = count($ids);
         $body  = ['Process' => []];
         if (0 === $total) {
-            throw new \InvalidArgumentException('You must provide at least one transaction ID to run the processor.');
+            throw new InvalidArgumentException('You must provide at least one transaction ID to run the processor.');
         }
         foreach ($ids as $id) {
             $body['Process'][] = [
