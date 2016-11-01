@@ -54,6 +54,21 @@ class CustomerResource extends AbstractResource
     }
 
     /**
+     * Customer Lookup Service By External ID
+     *
+     * @link    https://jira.omeda.com/wiki/en/Customer_Lookup_Service_By_External_ID
+     *
+     * @param   string  $namespace  The external customer namespace.
+     * @param   string  $externalId The external customer id.
+     * @return  \GuzzleHttp\Psr7\Response
+     */
+    public function lookupByExternalId($namespace, $externalId)
+    {
+        $endpoint = $this->client->buildBrandEndpoint(sprintf('/customer/%s/externalcustomeridnamespace/%s/externalcustomerid/*', $namespace, $externalId));
+        return $this->client->request('GET', $endpoint);
+    }
+
+    /**
      * Customer Lookup Service By CustomerId.
      *
      * @link    https://jira.omeda.com/wiki/en/Customer_Lookup_Service_By_CustomerId
@@ -65,5 +80,19 @@ class CustomerResource extends AbstractResource
     {
         $endpoint = $this->client->buildBrandEndpoint(sprintf('/customer/%s/*', $customerId));
         return $this->client->request('GET', $endpoint);
+    }
+
+    /**
+     * Save Customer and Order API.
+     *
+     * @link    https://jira.omeda.com/wiki/en/Save_Customer_and_Order_API
+     *
+     * @param   array   $payload    The customer payload.
+     * @return  \GuzzleHttp\Psr7\Response
+     */
+    public function save(array $payload)
+    {
+        $endpoint = $this->client->buildBrandEndpoint('/storecustomerandorder/*');
+        return $this->client->request('POST', $endpoint, $payload);
     }
 }
