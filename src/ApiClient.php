@@ -2,6 +2,7 @@
 
 namespace As3\OmedaSDK;
 
+use As3\OmedaSDK\Exception\RuntimeException;
 use As3\Parameters\DefinedParameters as Parameters;
 use As3\Parameters\Definitions;
 use GuzzleHttp\Client;
@@ -90,14 +91,21 @@ class ApiClient
      *
      * @param   string  $endpoint
      * @return  string
-     * @throws  \RuntimeException
      */
     public function buildBrandEndpoint($endpoint)
     {
-        if (false === $this->hasValidConfig()) {
-            throw new \RuntimeException(sprintf('The Omeda API configuration is not valid. Unable to build endpoint.'));
-        }
-        return sprintf('/brand/%s/%s', $this->configuration->get('brandKey'), trim($endpoint, '/'));
+        return $this->buildEndpoint('brand', 'brandKey', $endpoint);
+    }
+
+    /**
+     * Builds a client endpoint, e.g. /client/{clientKey}/{$endpoint}
+     *
+     * @param   string  $endpoint
+     * @return  string
+     */
+    public function buildClientEndpoint($endpoint)
+    {
+        return $this->buildEndpoint('client', 'clientKey', $endpoint);
     }
 
     /**
@@ -140,12 +148,12 @@ class ApiClient
      *
      * @param   string      $key
      * @return  AbstractResource
-     * @throws  \RuntimeException If resource is not found.
+     * @throws  RuntimeException If resource is not found.
      */
     public function getResource($key)
     {
         if (!isset($this->resources[$key])) {
-            throw new \RuntimeException(sprintf('No Omeda API resource exists for "%s"', $key));
+            throw new RuntimeException(sprintf('No Omeda API resource exists for "%s"', $key));
         }
         return $this->resources[$key];
     }
@@ -174,11 +182,12 @@ class ApiClient
      * Sends a request to the Omeda API.
      *
      * @return  \GuzzleHttp\Psr7\Response
+     * @throws  RuntimeException
      */
     public function request($method, $endpoint, $body = null, $contentType = 'application/json')
     {
         if (false === $this->hasValidConfig()) {
-            throw new \RuntimeException(sprintf('The Omeda API configuration is not valid. Unable to perform request.'));
+            throw new RuntimeException(sprintf('The Omeda API configuration is not valid. Unable to perform request.'));
         }
         $method      = strtoupper($method);
         $contentType = strtolower($contentType);
@@ -205,6 +214,23 @@ class ApiClient
     {
         $this->isStaging = (boolean) $staging;
         return $this;
+    }
+
+    /**
+     * Builds a complete API endpoint for the type, the config value to inject, and the remaining endpoint details.
+     *
+     * @param   string  $type       One of brand or client.
+     * @param   string  $configKey  The config key to use to get the value.
+     * @param   string  $endpoint   The remaining endpoint.
+     * @return  string
+     * @throws  RuntimeException    If the client config is currently invalid.
+     */
+    private function buildEndpoint($type, $configKey, $endpoint)
+    {
+        if (false === $this->hasValidConfig()) {
+            throw new RuntimeException(sprintf('The Omeda API configuration is not valid. Unable to build endpoint.'));
+        }
+        return sprintf('/%s/%s/%s', $type, $this->configuration->get($configKey), trim($endpoint, '/'));
     }
 
     /**
@@ -308,6 +334,7 @@ class ApiClient
         $resources = [
             'brand'     => 'BrandResource',
             'customer'  => 'CustomerResource',
+            'omail'     => 'OmailResource',
             'utility'   => 'UtilityResource',
         ];
         foreach ($resources as $key => $class) {
