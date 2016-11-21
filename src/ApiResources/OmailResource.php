@@ -7,6 +7,44 @@ use As3\OmedaSDK\Exception\InvalidArgumentException;
 class OmailResource extends AbstractResource
 {
     /**
+     * Deployment Lookup Resource.
+     * The Deployment Lookup API provides the ability to retrieve deployment information such as link tracking, delivery statistics, deployment status, history, etc.
+     *
+     * @link    https://jira.omeda.com/wiki/en/Deployment_Lookup_Resource
+     *
+     * @param   string  $trackId            The deployment track identifier.
+     * @throws  InvalidArgumentException    If the track id is empty.
+     * @return  \GuzzleHttp\Psr7\Response
+     */
+    public function deploymentLookup($trackId)
+    {
+        if (empty($trackId)) {
+            throw new InvalidArgumentException('The deployment track ID cannot be empty.');
+        }
+        $endpoint = $this->client->buildBrandEndpoint(sprintf('/omail/deployment/lookup/%s/*', $trackId));
+        return $this->client->request('GET', $endpoint);
+    }
+
+    /**
+     * Deployment Search Resource.
+     * This service retrieves a list of most recent deployments for a given brand based on search parameters.
+     *
+     * @link    https://jira.omeda.com/wiki/en/Deployment_Search_Resource
+     *
+     * @param   array   $payload            The search parameters to send.
+     * @throws  InvalidArgumentException    If search parameter payload is empty.
+     * @return  \GuzzleHttp\Psr7\Response
+     */
+    public function deploymentSearch(array $payload)
+    {
+        if (empty($payload)) {
+            throw new InvalidArgumentException('The deployment search payload cannot be empty.');
+        }
+        $endpoint = $this->client->buildBrandEndpoint('/omail/deployment/search/*');
+        return $this->client->request('POST', $endpoint, $payload);
+    }
+
+    /**
      * Optin Queue Service.
      * Opts an email address in to the provided deployment types.
      *
