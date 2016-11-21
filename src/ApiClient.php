@@ -7,6 +7,7 @@ use As3\Parameters\DefinedParameters as Parameters;
 use As3\Parameters\Definitions;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 
 class ApiClient
 {
@@ -176,6 +177,21 @@ class ApiClient
     public function isUsingStaging()
     {
         return true === $this->isStaging;
+    }
+
+    /**
+     * Parses an API response body.
+     *
+     * @param   Response    $response
+     * @return  array
+     */
+    public function parseApiResponse(Response $response)
+    {
+        $payload = @json_decode($response->getBody()->getContents(), true);
+        if (!is_array($payload)) {
+            throw new RuntimeException('Unable to parse API response');
+        }
+        return $payload;
     }
 
     /**
