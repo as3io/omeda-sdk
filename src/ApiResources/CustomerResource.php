@@ -2,6 +2,8 @@
 
 namespace As3\OmedaSDK\ApiResources;
 
+use GuzzleHttp\Exception\ClientException;
+
 class CustomerResource extends AbstractResource
 {
     /**
@@ -10,12 +12,13 @@ class CustomerResource extends AbstractResource
      * @link    https://jira.omeda.com/wiki/en/Customer_Comprehensive_Lookup_Service
      *
      * @param   int  $customerId
+     * @param   bool $returnMerged  Whether to automatically return a merged customer if encountered.
      * @return  \GuzzleHttp\Psr7\Response
      */
-    public function lookup($customerId)
+    public function lookup($customerId, $returnMerged = true)
     {
         $endpoint = $this->client->buildBrandEndpoint(sprintf('/customer/%s/comp/*', $customerId));
-        return $this->client->request('GET', $endpoint);
+        return $this->handleMergedCustomer($returnMerged, $endpoint);
     }
 
     /**
@@ -45,12 +48,12 @@ class CustomerResource extends AbstractResource
      * @link    https://jira.omeda.com/wiki/en/Customer_Lookup_Service_By_EncryptedCustomerId
      *
      * @param   string      $encryptedId
+     * @param   bool $returnMerged  Whether to automatically return a merged customer if encountered.
      * @return  \GuzzleHttp\Psr7\Response
      */
-    public function lookupByEncryptedId($encryptedId)
+    public function lookupByEncryptedId($encryptedId, $returnMerged = true)
     {
-        $endpoint = $this->client->buildBrandEndpoint(sprintf('/customer/%s/encrypted/*', $encryptedId));
-        return $this->client->request('GET', $endpoint);
+        return $this->lookupById($encryptedId, $returnMerged);
     }
 
     /**
@@ -74,12 +77,14 @@ class CustomerResource extends AbstractResource
      * @link    https://jira.omeda.com/wiki/en/Customer_Lookup_Service_By_CustomerId
      *
      * @param   int  $customerId
+     * @param   bool $returnMerged  Whether to automatically return a merged customer if encountered.
      * @return  \GuzzleHttp\Psr7\Response
      */
-    public function lookupById($customerId)
+    public function lookupById($customerId, $returnMerged = true)
     {
         $endpoint = $this->client->buildBrandEndpoint(sprintf('/customer/%s/*', $customerId));
-        return $this->client->request('GET', $endpoint);
+        return $this->handleMergedCustomer($returnMerged, $endpoint);
+
     }
 
     /**
@@ -94,5 +99,39 @@ class CustomerResource extends AbstractResource
     {
         $endpoint = $this->client->buildBrandEndpoint('/storecustomerandorder/*');
         return $this->client->request('POST', $endpoint, $payload);
+    }
+
+    /**
+     * If a `merged into customer` error was encountered, will attempt to retrieve the merged customer.
+     * Will only run if enabled.
+     *
+     * @param   bool    $enabled
+     * @param   string  $endpoint
+     * @return  \GuzzleHttp\Psr7\Response
+     * @throws  ClientException
+     */
+    private function handleMergedCustomer($enabled, $endpoint)
+    {
+        $enabled = (boolean) $enabled;
+        if (false === $enabled) {
+            return $this->client->request('GET', $endpoint);
+        }
+        try {
+            return $this->client->request('GET', $endpoint);
+        } catch (ClientException $e) {
+            if (404 != $e->getCode()) {
+                throw $e;
+            }
+            $body = $this->client->parseApiResponse($e->getResponse());
+            if (is_array($body) && isset($body['Errors']) && is_array($body['Errors'])) {
+                foreach ($body['Errors'] as $error) {
+                    if (isset($error['MergedIntoCustomerId'])) {
+                        return $this->lookupById($error['MergedIntoCustomerId']);
+                    }
+                }
+                throw $e;
+            }
+            throw $e;
+        }
     }
 }
