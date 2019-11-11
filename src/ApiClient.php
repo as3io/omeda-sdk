@@ -305,7 +305,7 @@ class ApiClient
         ];
         if (in_array($method, ['POST', 'PUT', 'DELETE'])) {
             $headers['x-omeda-inputid'] = $this->configuration->get('inputId');
-            $headers['content-ty[e']    = $contentType;
+            $headers['content-type']    = $contentType;
         }
         return $headers;
     }
